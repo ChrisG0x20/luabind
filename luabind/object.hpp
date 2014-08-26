@@ -430,6 +430,7 @@ LUABIND_BINARY_OP_DEF(<, lua_lessthan)
       void push(lua_State* interpreter)
       {
           assert(interpreter == m_interpreter);
+          (void)(interpreter); // UNREFERENCED_PARAMETER in release build.
           lua_pushvalue(m_interpreter, m_key_index);
           AccessPolicy::get(m_interpreter, m_table_index);
       }
@@ -1097,7 +1098,7 @@ namespace detail
       }
 
       template <class Args, class Policies, class E>
-      static void push_args(lua_State* L, Args const&, Policies const&, E, E)
+      static void push_args(lua_State*, Args const&, Policies const&, E, E)
       {}
 
       template <class... Args, class Policies = null_type>

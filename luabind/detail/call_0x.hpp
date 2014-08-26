@@ -121,6 +121,7 @@ inline int sum_scores(int const* first, int const* last)
 template <class T, class Converter>
 int compute_score(lua_State* L, Converter& converter, int index)
 {
+    (void)(converter); // HACK: To stop VS 2013 from generating a broken warning C4100.
     return converter.match(L, LUABIND_DECORATE_TYPE(T), index);
 }
 
@@ -147,7 +148,7 @@ void invoke_function(
 
 template <class F, class... Args>
 void invoke_function(
-    lua_State* L, F const& f, std::false_type, void_result, Args&&... args)
+    lua_State*, F const& f, std::false_type, void_result, Args&&... args)
 {
     f(std::forward<Args>(args)...);
 }
@@ -162,7 +163,7 @@ void invoke_function(
 
 template <class F, class This, class... Args>
 void invoke_function(
-    lua_State* L, F const& f, std::true_type, void_result, This&& this_, Args&&... args)
+    lua_State*, F const& f, std::true_type, void_result, This&& this_, Args&&... args)
 {
     (this_.*f)(std::forward<Args>(args)...);
 }
@@ -196,7 +197,7 @@ template <
 >
 inline int invoke_actual(
     lua_State* L, function_object const& self, invoke_context& ctx
-  , F const& f, Policies const& policies
+  , F const& f, Policies const&
   , vector<R, Args...>, index_tuple<Indices...>
   , ResultConverter& result_converter, Converters&&... converters)
 {
@@ -209,10 +210,11 @@ inline int invoke_actual(
     if (arity == arguments)
     {
         int const scores[] = {
+            0, // HACK: So the array is valid when arity is zero.
             compute_score<Args>(L, converters, indices[Indices + 1])...
         };
 
-        score = sum_scores(scores, scores + sizeof...(Args));
+        score = sum_scores(scores, scores + sizeof...(Args) + 1);
     }
 
     if (score >= 0 && score < ctx.best_score)
